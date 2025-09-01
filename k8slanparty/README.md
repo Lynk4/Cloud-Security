@@ -909,3 +909,112 @@ player@wiz-k8s-lan-party:~$
 
 ---
 
+---
+
+---
+
+
+
+
+
+
+## LATERAL MOVEMENT
+
+kyverno policy:
+
+```json
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  name: apply-flag-to-env
+  namespace: sensitive-ns
+spec:
+  rules:
+    - name: inject-env-vars
+      match:
+        resources:
+          kinds:
+            - Pod
+      mutate:
+        patchStrategicMerge:
+          spec:
+            containers:
+              - name: "*"
+                env:
+                  - name: FLAG
+                    value: "{flag}"
+```
+
+### dnscan 
+
+```bash
+player@wiz-k8s-lan-party:~$ cat /etc/resolv.conf 
+search k8s-lan-party.svc.cluster.local svc.cluster.local cluster.local us-west-1.compute.internal
+nameserver 10.100.86.83
+options ndots:5
+player@wiz-k8s-lan-party:~$ dnscan -subnet 10.100.*.*
+22071 / 65536 [------------------------------------------>____________________________________________________________________________________] 33.68% 987 p/s10.100.86.210 kyverno-cleanup-controller.kyverno.svc.cluster.local.
+32183 / 65536 [-------------------------------------------------------------->________________________________________________________________] 49.11% 990 p/s10.100.126.98 kyverno-svc-metrics.kyverno.svc.cluster.local.
+40485 / 65536 [------------------------------------------------------------------------------>________________________________________________] 61.78% 989 p/s10.100.158.213 kyverno-reports-controller-metrics.kyverno.svc.cluster.local.
+43840 / 65536 [------------------------------------------------------------------------------------>__________________________________________] 66.89% 989 p/s10.100.171.174 kyverno-background-controller-metrics.kyverno.svc.cluster.local.
+55700 / 65536 [----------------------------------------------------------------------------------------------------------->___________________] 84.99% 989 p/s10.100.217.223 kyverno-cleanup-controller-metrics.kyverno.svc.cluster.local.
+59244 / 65536 [------------------------------------------------------------------------------------------------------------------>____________] 90.40% 987 p/s10.100.232.19 kyverno-svc.kyverno.svc.cluster.local.
+65358 / 65536 [------------------------------------------------------------------------------------------------------------------------------>] 99.73% 987 p/s10.100.86.210 -> kyverno-cleanup-controller.kyverno.svc.cluster.local.
+10.100.126.98 -> kyverno-svc-metrics.kyverno.svc.cluster.local.
+10.100.158.213 -> kyverno-reports-controller-metrics.kyverno.svc.cluster.local.
+10.100.171.174 -> kyverno-background-controller-metrics.kyverno.svc.cluster.local.
+10.100.217.223 -> kyverno-cleanup-controller-metrics.kyverno.svc.cluster.local.
+10.100.232.19 -> kyverno-svc.kyverno.svc.cluster.local.
+player@wiz-k8s-lan-party:~$
+```
+
+```bash
+s10.100.86.210 -> kyverno-cleanup-controller.kyverno.svc.cluster.local.
+10.100.126.98 -> kyverno-svc-metrics.kyverno.svc.cluster.local.
+10.100.158.213 -> kyverno-reports-controller-metrics.kyverno.svc.cluster.local.
+10.100.171.174 -> kyverno-background-controller-metrics.kyverno.svc.cluster.local.
+10.100.217.223 -> kyverno-cleanup-controller-metrics.kyverno.svc.cluster.local.
+10.100.232.19 -> kyverno-svc.kyverno.svc.cluster.local.
+```
+
+---
+
+Kyverno is a Kubernetes tool that assists in managing configurations and enforcing policies within clusters. It manages compliance and security by providing definitions of rules using custom resource definitions (CRDs), offering fine-grained control over resource behavior and management.
+
+The policy defined in the challenge is to state that any pod being created within the sensitive-ns will have the secret injected into the FLAG env variable.
+
+
+---
+
+
+To generate a pod admission request, we can make use of a utility named kube-review based on hints. I saved a pod in a yaml file with following code:
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sensitive-pod
+  namespace: sensitive-ns
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+
+---
+
+
+To generate the admission request, download [kube-review](https://github.com/anderseknert/kube-review?tab=readme-ov-file)
+locally and execute the following command:
+
+```./kube-review-darwin-amd64 create pod.yaml```
+
+
+---
+
+
+
+
+
+
+
