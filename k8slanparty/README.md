@@ -1,5 +1,10 @@
 # K8s LAN Party Challenge
 
+# K8s LAN PARTY
+
+## Dive into a network full of miscongurations and exploit vulnerabilities with the goal of conquering a Kubernetes cluster
+
+
 #### https://k8slanparty.com/
 
 ---
