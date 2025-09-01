@@ -990,7 +990,7 @@ The policy defined in the challenge is to state that any pod being created withi
 To generate a pod admission request, we can make use of a utility named kube-review based on hints. I saved a pod in a yaml file with following code:
 
 ---
-
+```json
 apiVersion: v1
 kind: Pod
 metadata:
@@ -1000,7 +1000,7 @@ spec:
   containers:
   - name: nginx
     image: nginx:latest
-
+```
 ---
 
 
